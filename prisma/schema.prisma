@@ -10,8 +10,10 @@ datasource db {
 model User {
   id          Int     @id @default(autoincrement())
   name        String? @db.VarChar(50)
+  email       String? @db.VarChar(50)
   provider    String? @db.VarChar(50)
   provider_id String? @db.VarChar(50)
 
+  @@unique([provider, provider_id], map: "provider_provider_id")
   @@map("users")
 }
