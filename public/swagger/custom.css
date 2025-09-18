@@ -1,0 +1,67 @@
+/* Swagger UI Custom Styles */
+
+/* 상단 바 숨기기 */
+.swagger-ui .topbar {
+  display: none !important;
+}
+
+/* 제목 스타일링 */
+.swagger-ui .info .title {
+  color: #667eea;
+  font-size: 36px;
+  margin-bottom: 20px;
+}
+
+/* Authorize 버튼 스타일링 */
+.swagger-ui .auth-wrapper .authorize {
+  background: #4285f4 !important;
+  color: white !important;
+  border-radius: 4px !important;
+  padding: 8px 16px !important;
+  font-weight: bold !important;
+}
+
+.swagger-ui .auth-wrapper .authorize {
+  font-size: 0 !important;
+}
+
+.swagger-ui .auth-wrapper .authorize::after {
+  content: 'Authorize Scheme' !important;
+  font-size: 14px !important;
+  color: white !important;
+  font-weight: bold !important;
+}
+
+/* Auth 팝업 input 창 숨기기 */
+.swagger-ui .auth-container input {
+  display: none !important;
+}
+
+/* 자동 포커스 방지 */
+.swagger-ui .auth-container input:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Authorize 버튼만 비활성화 (닫기 버튼은 제외) */
+.swagger-ui .auth-container .btn.authorize {
+  background-color: #ccc !important;
+  pointer-events: none !important;
+  cursor: not-allowed !important;
+  opacity: 0.6 !important;
+  font-size: 0 !important;
+}
+
+.swagger-ui .auth-container .btn.authorize::after {
+  content: '구글로그인 이용' !important;
+  font-size: 14px !important;
+  color: #666 !important;
+  font-weight: bold !important;
+}
+
+/* 닫기 버튼은 정상 작동 */
+.swagger-ui .auth-container .close-modal {
+  pointer-events: auto !important;
+  background-color: #333 !important;
+  opacity: 1 !important;
+}

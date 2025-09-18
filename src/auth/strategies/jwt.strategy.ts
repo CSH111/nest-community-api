@@ -11,7 +11,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       jwtFromRequest: ExtractJwt.fromExtractors([
         ExtractJwt.fromAuthHeaderAsBearerToken(),
         (request: Request) => {
-          return request?.cookies?.access_token;
+          return request.cookies?.access_token;
         },
       ]),
       ignoreExpiration: false,
@@ -20,7 +20,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
+    console.log('jwt validate run');
     const user = await this.authService.findUserById(payload.sub);
+    console.log('user: ', user);
     return user;
   }
 }

@@ -1,24 +1,25 @@
 import { Controller, Get, Post, Body, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiSecurity, ApiCookieAuth } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
   @Get('google')
+  @ApiOperation({ summary: 'Google OAuth 로그인', description: 'Google OAuth 로그인 페이지로 리다이렉트' })
+  @ApiResponse({ status: 302, description: 'Google OAuth 페이지로 리다이렉트' })
   @UseGuards(AuthGuard('google'))
   googleLogin() {
     // 구글 로그인 페이지로 리다이렉트
   }
 
-  @Get('google/select-account')
-  @UseGuards(AuthGuard('google'))
-  googleSelectAccount() {
-    // 이 엔드포인트는 prompt=select_account로 Google에 요청
-  }
-
   @Get('google/callback')
+  @ApiOperation({ summary: 'Google OAuth 콜백', description: 'Google OAuth 인증 후 JWT 토큰 발급' })
+  @ApiResponse({ status: 302, description: '인증 성공 시 프론트엔드로 리다이렉트' })
+  @ApiResponse({ status: 401, description: '인증 실패' })
   @UseGuards(AuthGuard('google'))
   async googleCallback(@Req() req: Request, @Res() res: Response) {
     // OAuth 성공 후 처리
@@ -44,27 +45,40 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
     });
 
-    // 토큰 없이 프론트엔드로 리다이렉트
-    res.redirect('http://localhost:3000/auth/success');
+    // 팝업 창을 닫는 HTML 반환
+    res.send(`
+      <html>
+        <head><title>로그인 완료</title></head>
+        <body>
+          <script>
+            if (window.opener) {
+              window.opener.postMessage({ type: 'LOGIN_SUCCESS' }, '*');
+            }
+            window.close();
+          </script>
+        </body>
+      </html>
+    `);
   }
 
   @Get('profile')
+  @ApiOperation({ summary: '사용자 프로필 조회', description: 'JWT 토큰으로 인증된 사용자 정보 조회' })
+  @ApiResponse({ status: 200, description: '사용자 정보 반환' })
+  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
+  @ApiSecurity('AccessTokenAuth')
   @UseGuards(AuthGuard('jwt'))
   getProfile(@Req() req: Request) {
     return req.user;
   }
 
-  @Post('token')
-  async getToken(@Body() body: { userId: number }) {
-    const user = await this.authService.findUserById(body.userId);
-    if (!user) {
-      throw new Error('User not found');
-    }
-    return this.authService.generateJwtToken(user);
-  }
 
-  @Post('refresh')
-  async refresh(@Req() req: Request, @Res() res: Response) {
+  @Post('refresh-access')
+  @ApiOperation({ summary: 'Access Token 갱신', description: '만료된 Access Token을 Refresh Token으로 새로 발급 (Refresh Token도 함께 갱신)' })
+  @ApiResponse({ status: 200, description: 'Access Token 갱신 성공' })
+  @ApiResponse({ status: 401, description: '유효하지 않은 Refresh Token' })
+  @ApiSecurity('AccessTokenAuth')
+  @ApiSecurity('RefreshTokenAuth')
+  async refreshAccess(@Req() req: Request, @Res() res: Response) {
     try {
       const refreshToken = req.cookies?.refresh_token;
       if (!refreshToken) {
@@ -88,13 +102,18 @@ export class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
       });
 
-      return res.json({ message: '토큰이 갱신되었습니다.' });
+      return res.json({ message: 'Access Token이 갱신되었습니다.' });
     } catch (error) {
       return res.status(401).json({ message: 'Invalid refresh token' });
     }
   }
 
+
   @Post('logout')
+  @ApiOperation({ summary: '로그아웃', description: '토큰 무효화 및 쿠키 삭제' })
+  @ApiResponse({ status: 200, description: '로그아웃 성공' })
+  @ApiSecurity('AccessTokenAuth')
+  @ApiSecurity('RefreshTokenAuth')
   async logout(@Req() req: Request, @Res() res: Response) {
     try {
       const refreshToken = req.cookies?.refresh_token;

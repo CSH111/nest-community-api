@@ -1,8 +1,29 @@
 import { NestFactory } from '@nestjs/core';
+import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import { setupSwagger } from './config/swagger.config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // 정적 파일 서빙 설정
+  app.useStaticAssets(join(__dirname, '..', 'public'));
+
+  // Cookie parser 미들웨어 추가
+  app.use(cookieParser());
+
+  // CORS 설정 (Swagger에서 쿠키 사용을 위해)
+  app.enableCors({
+    origin: ['http://localhost:3000', 'http://localhost:5002'],
+    credentials: true,
+  });
+
+  // Swagger 설정
+  setupSwagger(app);
+
   await app.listen(process.env.PORT || 3000);
+  console.log(`Application is running on: http://localhost:${process.env.PORT || 3000}`);
 }
 bootstrap();

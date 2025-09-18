@@ -14,13 +14,13 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       // prompt: 'select_account'
     });
   }
-  // async authenticate(req: any, options?: any) {
-  //   const authOptions = {
-  //     ...options,
-  //     prompt: req.query.prompt || 'consent', // 쿼리에서 prompt 값 읽기
-  //   };
-  //   return super.authenticate(req, authOptions);
-  // }
+  async authenticate(req: any, options?: any) {
+    const authOptions = {
+      ...options,
+      prompt: req.query.prompt || 'consent', // 쿼리에서 prompt 값 읽기
+    };
+    return super.authenticate(req, authOptions);
+  }
 
   async validate(
     accessToken: string,
