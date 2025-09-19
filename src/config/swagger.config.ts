@@ -31,9 +31,16 @@ export function setupSwagger(app: NestExpressApplication) {
       filter: true,
       defaultModelsExpandDepth: 1,
       defaultModelExpandDepth: 1,
+      // 쿠키 기반 인증을 위한 요청 인터셉터
+      requestInterceptor: (req) => {
+        // 모든 요청에 credentials 포함
+        req.credentials = 'include';
+        return req;
+      }
     },
     customSiteTitle: 'Community API Docs',
     customCssUrl: '/swagger/custom.css',
+    // customJs: ['/swagger/auth-buttons.js', '/swagger/auth-interceptor.js'],
     customJs: ['/swagger/auth-buttons.js'],
   });
 

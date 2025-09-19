@@ -173,34 +173,13 @@ export class AuthController {
     const devices = await this.authService.getActiveDevices(user.id);
 
     return {
-      devices: devices.map(device => ({
-        id: device.id,
-        deviceId: device.device_id,
-        deviceName: device.device_name,
-        deviceType: device.device_type,
-        lastUsedAt: device.last_used_at,
-        createdAt: device.created_at,
-        ipAddress: device.ip_address,
-      })),
+      devices,
       total: devices.length,
     };
   }
 
-  @Delete('devices/:deviceId')
-  @ApiOperation({ summary: '특정 기기 로그아웃', description: '선택한 기기의 세션을 무효화' })
-  @ApiParam({ name: 'deviceId', description: '기기 ID' })
-  @ApiResponse({ status: 200, description: '기기 로그아웃 성공' })
-  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
-  @ApiSecurity('AccessTokenAuth')
-  @UseGuards(AuthGuard('jwt'))
-  async logoutDevice(@Req() req: Request, @Param('deviceId') deviceId: string) {
-    const user = req.user as any;
-    await this.authService.removeDeviceSession(user.id, deviceId);
 
-    return { message: `기기 ${deviceId}가 로그아웃되었습니다.` };
-  }
-
-  @Delete('devices/all')
+  @Post('devices/all/logout')
   @ApiOperation({ summary: '모든 다른 기기 로그아웃', description: '현재 기기를 제외한 모든 기기 세션 무효화' })
   @ApiResponse({ status: 200, description: '모든 다른 기기 로그아웃 성공' })
   @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
@@ -234,7 +213,30 @@ export class AuthController {
     return { message: '다른 모든 기기에서 로그아웃되었습니다.' };
   }
 
-  @Delete('devices/all/force')
+  @Post('devices/:deviceId/logout')
+  @ApiOperation({ summary: '특정 기기 로그아웃', description: '본인 소유 기기만 로그아웃 가능' })
+  @ApiParam({ name: 'deviceId', description: '기기 ID' })
+  @ApiResponse({ status: 200, description: '기기 로그아웃 성공' })
+  @ApiResponse({ status: 400, description: '해당 기기를 찾을 수 없거나 접근 권한 없음' })
+  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
+  @ApiSecurity('AccessTokenAuth')
+  @UseGuards(AuthGuard('jwt'))
+  async logoutDevice(@Req() req: Request, @Param('deviceId') deviceId: string) {
+    try {
+      const user = req.user as any;
+      await this.authService.removeDeviceSession(user.id, deviceId);
+
+      return { message: `기기 ${deviceId}가 로그아웃되었습니다.` };
+    } catch (error) {
+      return {
+        statusCode: 400,
+        message: error.message || '기기 로그아웃에 실패했습니다.',
+        error: 'Bad Request'
+      };
+    }
+  }
+
+  @Post('devices/all/force-logout')
   @ApiOperation({ summary: '모든 기기 강제 로그아웃', description: '현재 기기를 포함한 모든 기기 세션 무효화' })
   @ApiResponse({ status: 200, description: '모든 기기 강제 로그아웃 성공' })
   @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })

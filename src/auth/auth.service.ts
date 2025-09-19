@@ -242,6 +242,8 @@ export class AuthService {
       select: {
         id: true,
         device_id: true,
+        is_active:true,
+        user_id: true,
         device_name: true,
         device_type: true,
         last_used_at: true,
@@ -255,6 +257,20 @@ export class AuthService {
   }
 
   async removeDeviceSession(userId: number, deviceId: string) {
+    // 본인 소유 기기인지 확인
+    const deviceExists = await this.prisma.refreshToken.findFirst({
+      where: {
+        user_id: userId,
+        device_id: deviceId,
+        is_active: true,
+      },
+    });
+
+    if (!deviceExists) {
+      throw new Error('해당 기기를 찾을 수 없거나 접근 권한이 없습니다.');
+    }
+
+    // 본인의 기기만 로그아웃 처리
     await this.prisma.refreshToken.updateMany({
       where: {
         user_id: userId,

@@ -32,15 +32,9 @@
   font-weight: bold !important;
 }
 
-/* Auth 팝업 input 창 숨기기 */
+/* Auth 팝업 내부의 input만 숨기기 (Authorization 팝업) */
 .swagger-ui .auth-container input {
   display: none !important;
-}
-
-/* 자동 포커스 방지 */
-.swagger-ui .auth-container input:focus {
-  outline: none !important;
-  box-shadow: none !important;
 }
 
 /* Authorize 버튼만 비활성화 (닫기 버튼은 제외) */
@@ -53,6 +47,7 @@
 }
 
 .swagger-ui .auth-container .btn.authorize::after {
+
   content: '구글로그인 이용' !important;
   font-size: 14px !important;
   color: #666 !important;
