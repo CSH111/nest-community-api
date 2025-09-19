@@ -1,6 +1,6 @@
-import { Controller, Get, Post, Body, Req, Res, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Body, Req, Res, UseGuards, Param } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiSecurity, ApiCookieAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiSecurity, ApiCookieAuth, ApiParam } from '@nestjs/swagger';
 import { Request, Response } from 'express';
 import { AuthService } from './auth.service';
 
@@ -17,7 +17,7 @@ export class AuthController {
   }
 
   @Get('google/callback')
-  @ApiOperation({ summary: 'Google OAuth 콜백', description: 'Google OAuth 인증 후 JWT 토큰 발급' })
+  @ApiOperation({ summary: 'Google OAuth 콜백', description: 'Google OAuth 인증 후 JWT 다중세션 토큰 발급' })
   @ApiResponse({ status: 302, description: '인증 성공 시 프론트엔드로 리다이렉트' })
   @ApiResponse({ status: 401, description: '인증 실패' })
   @UseGuards(AuthGuard('google'))
@@ -27,8 +27,11 @@ export class AuthController {
     console.log('req.user;: ', req.user);
     console.log('Google OAuth 성공:', user);
 
-    // JWT 토큰 생성 (Access + Refresh)
-    const tokens = await this.authService.generateTokens(user);
+    // 기기 정보 추출
+    const deviceInfo = this.extractDeviceInfo(req);
+
+    // JWT 다중세션 토큰 생성
+    const tokens = await this.authService.generateTokens(user, deviceInfo);
 
     // HttpOnly 쿠키로 토큰 설정 (XSS 공격 방지)
     res.cookie('access_token', tokens.access_token, {
@@ -61,6 +64,31 @@ export class AuthController {
     `);
   }
 
+  private extractDeviceInfo(req: Request) {
+    const userAgent = req.headers['user-agent'] || '';
+    const ip = req.ip || req.connection.remoteAddress || '';
+
+    let deviceType = 'unknown';
+    if (userAgent.includes('Mobile')) deviceType = 'mobile';
+    else if (userAgent.includes('Tablet')) deviceType = 'tablet';
+    else deviceType = 'desktop';
+
+    return {
+      userAgent,
+      ip,
+      deviceType,
+      deviceName: this.getDeviceName(userAgent)
+    };
+  }
+
+  private getDeviceName(userAgent: string): string {
+    if (userAgent.includes('Chrome')) return 'Chrome Browser';
+    if (userAgent.includes('Firefox')) return 'Firefox Browser';
+    if (userAgent.includes('Safari')) return 'Safari Browser';
+    if (userAgent.includes('Edge')) return 'Edge Browser';
+    return 'Unknown Device';
+  }
+
   @Get('profile')
   @ApiOperation({ summary: '사용자 프로필 조회', description: 'JWT 토큰으로 인증된 사용자 정보 조회' })
   @ApiResponse({ status: 200, description: '사용자 정보 반환' })
@@ -73,7 +101,7 @@ export class AuthController {
 
 
   @Post('refresh-access')
-  @ApiOperation({ summary: 'Access Token 갱신', description: '만료된 Access Token을 Refresh Token으로 새로 발급 (Refresh Token도 함께 갱신)' })
+  @ApiOperation({ summary: 'Access Token 갱신', description: 'JWT 다중세션 방식으로 토큰 갱신 (토큰 로테이션 포함)' })
   @ApiResponse({ status: 200, description: 'Access Token 갱신 성공' })
   @ApiResponse({ status: 401, description: '유효하지 않은 Refresh Token' })
   @ApiSecurity('AccessTokenAuth')
@@ -85,7 +113,8 @@ export class AuthController {
         return res.status(401).json({ message: 'Refresh token not found' });
       }
 
-      const tokens = await this.authService.refreshAccessToken(refreshToken);
+      // JWT 다중세션 방식으로 토큰 갱신
+      const tokens = await this.authService.refreshAccessTokenForDevice(refreshToken, req);
 
       // 새로운 토큰들을 쿠키에 설정
       res.cookie('access_token', tokens.access_token, {
@@ -110,7 +139,7 @@ export class AuthController {
 
 
   @Post('logout')
-  @ApiOperation({ summary: '로그아웃', description: '토큰 무효화 및 쿠키 삭제' })
+  @ApiOperation({ summary: '로그아웃', description: 'JWT 다중세션 방식으로 현재 기기만 로그아웃' })
   @ApiResponse({ status: 200, description: '로그아웃 성공' })
   @ApiSecurity('AccessTokenAuth')
   @ApiSecurity('RefreshTokenAuth')
@@ -118,8 +147,8 @@ export class AuthController {
     try {
       const refreshToken = req.cookies?.refresh_token;
       if (refreshToken) {
-        // DB에서 refresh token 삭제
-        await this.authService.removeRefreshToken(refreshToken);
+        // JWT 다중세션: 현재 기기의 세션만 비활성화
+        await this.authService.removeCurrentDeviceSession(refreshToken);
       }
 
       res.clearCookie('access_token');
@@ -130,5 +159,95 @@ export class AuthController {
       res.clearCookie('refresh_token');
       return res.json({ message: '로그아웃되었습니다.' });
     }
+  }
+
+  // JWT 다중세션 관리 API 엔드포인트들
+  @Get('devices')
+  @ApiOperation({ summary: '활성 기기 목록 조회', description: '사용자의 모든 활성 세션(기기) 목록 조회' })
+  @ApiResponse({ status: 200, description: '활성 기기 목록 반환' })
+  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
+  @ApiSecurity('AccessTokenAuth')
+  @UseGuards(AuthGuard('jwt'))
+  async getActiveDevices(@Req() req: Request) {
+    const user = req.user as any;
+    const devices = await this.authService.getActiveDevices(user.id);
+
+    return {
+      devices: devices.map(device => ({
+        id: device.id,
+        deviceId: device.device_id,
+        deviceName: device.device_name,
+        deviceType: device.device_type,
+        lastUsedAt: device.last_used_at,
+        createdAt: device.created_at,
+        ipAddress: device.ip_address,
+      })),
+      total: devices.length,
+    };
+  }
+
+  @Delete('devices/:deviceId')
+  @ApiOperation({ summary: '특정 기기 로그아웃', description: '선택한 기기의 세션을 무효화' })
+  @ApiParam({ name: 'deviceId', description: '기기 ID' })
+  @ApiResponse({ status: 200, description: '기기 로그아웃 성공' })
+  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
+  @ApiSecurity('AccessTokenAuth')
+  @UseGuards(AuthGuard('jwt'))
+  async logoutDevice(@Req() req: Request, @Param('deviceId') deviceId: string) {
+    const user = req.user as any;
+    await this.authService.removeDeviceSession(user.id, deviceId);
+
+    return { message: `기기 ${deviceId}가 로그아웃되었습니다.` };
+  }
+
+  @Delete('devices/all')
+  @ApiOperation({ summary: '모든 다른 기기 로그아웃', description: '현재 기기를 제외한 모든 기기 세션 무효화' })
+  @ApiResponse({ status: 200, description: '모든 다른 기기 로그아웃 성공' })
+  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
+  @ApiSecurity('AccessTokenAuth')
+  @UseGuards(AuthGuard('jwt'))
+  async logoutAllOtherDevices(@Req() req: Request) {
+    const user = req.user as any;
+    const refreshToken = req.cookies?.refresh_token;
+
+    // 현재 기기의 device_id를 찾아서 제외
+    let currentDeviceId = null;
+    if (refreshToken) {
+      try {
+        const payload = this.authService['jwtService'].verify(refreshToken);
+        const currentToken = await this.authService['prisma'].refreshToken.findFirst({
+          where: {
+            user_id: payload.sub,
+            is_active: true,
+          },
+        });
+        if (currentToken) {
+          currentDeviceId = currentToken.device_id;
+        }
+      } catch (error) {
+        // 토큰이 유효하지 않으면 모든 기기 로그아웃
+      }
+    }
+
+    await this.authService.removeAllDeviceSessions(user.id, currentDeviceId);
+
+    return { message: '다른 모든 기기에서 로그아웃되었습니다.' };
+  }
+
+  @Delete('devices/all/force')
+  @ApiOperation({ summary: '모든 기기 강제 로그아웃', description: '현재 기기를 포함한 모든 기기 세션 무효화' })
+  @ApiResponse({ status: 200, description: '모든 기기 강제 로그아웃 성공' })
+  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
+  @ApiSecurity('AccessTokenAuth')
+  @UseGuards(AuthGuard('jwt'))
+  async forceLogoutAllDevices(@Req() req: Request, @Res() res: Response) {
+    const user = req.user as any;
+    await this.authService.removeAllDeviceSessions(user.id);
+
+    // 현재 기기의 쿠키도 삭제
+    res.clearCookie('access_token');
+    res.clearCookie('refresh_token');
+
+    return res.json({ message: '모든 기기에서 강제 로그아웃되었습니다.' });
   }
 }

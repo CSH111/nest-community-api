@@ -13,10 +13,34 @@ model User {
   email         String?   @db.VarChar(50)
   provider      String?   @db.VarChar(50)
   provider_id   String?   @db.VarChar(50)
-  refresh_token String?   @db.Text
   created_at    DateTime? @default(now()) @db.DateTime(0)
   updated_at    DateTime? @default(now()) @db.DateTime(0)
 
+  refresh_tokens RefreshToken[]
+
   @@unique([provider, provider_id], map: "provider_provider_id")
   @@map("users")
+}
+
+model RefreshToken {
+  id            String   @id @default(cuid())
+  token_hash    String   @db.VarChar(255)
+  user_id       Int
+  device_id     String   @db.VarChar(255)
+  device_name   String?  @db.VarChar(100)
+  device_type   String?  @db.VarChar(50)
+  user_agent    String?  @db.Text
+  ip_address    String?  @db.VarChar(45)
+  last_used_at  DateTime @default(now()) @db.DateTime(0)
+  expires_at    DateTime @db.DateTime(0)
+  created_at    DateTime @default(now()) @db.DateTime(0)
+  is_active     Boolean  @default(true)
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, device_id])
+  @@index([token_hash])
+  @@index([user_id])
+  @@index([expires_at])
+  @@map("refresh_tokens")
 }
