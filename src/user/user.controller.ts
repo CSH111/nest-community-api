@@ -26,24 +26,32 @@ export class UserController {
   //   return this.userService.create(createUserDto);
   // }
 
-  @Get()
-  @ApiOperation({ summary: '모든 사용자 조회', description: 'JWT 인증이 필요한 모든 사용자 목록 조회' })
+  @Get(':id')
+  @ApiOperation({ summary: '특정 사용자 조회', description: 'ID로 특정 사용자 정보 조회' })
   @ApiResponse({
     status: 200,
-    description: '사용자 목록 조회 성공',
+    description: '사용자 정보 조회 성공',
     schema: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          id: { type: 'number', example: 1 },
-          name: { type: 'string', example: '홍길동' },
-          email: { type: 'string', example: 'user@example.com' },
-          provider: { type: 'string', example: 'google' },
-          provider_id: { type: 'string', example: '1234567890' },
-          created_at: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' },
-          updated_at: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' }
-        }
+      type: 'object',
+      properties: {
+        id: { type: 'number', example: 1 },
+        name: { type: 'string', example: '홍길동' },
+        email: { type: 'string', example: 'user@example.com' },
+        provider: { type: 'string', example: 'google' },
+        provider_id: { type: 'string', example: '1234567890' },
+        created_at: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' },
+        updated_at: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 404,
+    description: '사용자를 찾을 수 없음',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 404 },
+        message: { type: 'string', example: 'User not found' }
       }
     }
   })
@@ -71,18 +79,13 @@ export class UserController {
   })
   @ApiSecurity('AccessTokenAuth')
   @UseGuards(JwtAuthGuard)
-  async findAll() {
-    return this.userService.findAll();
+  async findOne(@Param('id') id: string) {
+    const user = await this.userService.findOne(+id);
+    if (!user) {
+      throw new HttpException('User not found', HttpStatus.NOT_FOUND);
+    }
+    return user;
   }
-
-  // @Get(':id')
-  // async findOne(@Param('id') id: string) {
-  //   const user = await this.userService.findOne(+id);
-  //   if (!user) {
-  //     throw new HttpException('User not found', HttpStatus.NOT_FOUND);
-  //   }
-  //   return user;
-  // }
 
   // @Patch(':id')
   // async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {

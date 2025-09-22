@@ -7,7 +7,7 @@ import { Prisma, User } from '@prisma/client';
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
-
+  
   // async create(createUserDto: CreateUserDto) {
   //   return this.prisma.user.create({
   //     data: createUserDto,
@@ -18,11 +18,11 @@ export class UserService {
     return this.prisma.user.findMany();
   }
 
-  // async findOne(id: number) {
-  //   return this.prisma.user.findUnique({
-  //     where: { id },
-  //   });
-  // }
+  async findOne(id: number) {
+    return this.prisma.user.findUnique({
+      where: { id },
+    });
+  }
 
   // async update(id: number, updateUserDto: UpdateUserDto) {
   //   return this.prisma.user.update({
