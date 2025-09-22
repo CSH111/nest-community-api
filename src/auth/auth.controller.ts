@@ -91,8 +91,33 @@ export class AuthController {
 
   @Get('profile')
   @ApiOperation({ summary: '사용자 프로필 조회', description: 'JWT 토큰으로 인증된 사용자 정보 조회' })
-  @ApiResponse({ status: 200, description: '사용자 정보 반환' })
-  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 정보 반환',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'number', example: 1 },
+        name: { type: 'string', example: '홍길동' },
+        email: { type: 'string', example: 'user@example.com' },
+        provider: { type: 'string', example: 'google' },
+        provider_id: { type: 'string', example: '1234567890' },
+        created_at: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' },
+        updated_at: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증되지 않은 사용자',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 401 },
+        message: { type: 'string', example: 'Unauthorized' }
+      }
+    }
+  })
   @ApiSecurity('AccessTokenAuth')
   @UseGuards(AuthGuard('jwt'))
   getProfile(@Req() req: Request) {
@@ -102,8 +127,32 @@ export class AuthController {
 
   @Post('refresh-access')
   @ApiOperation({ summary: 'Access Token 갱신', description: 'JWT 다중세션 방식으로 토큰 갱신 (토큰 로테이션 포함)' })
-  @ApiResponse({ status: 200, description: 'Access Token 갱신 성공' })
-  @ApiResponse({ status: 401, description: '유효하지 않은 Refresh Token' })
+  @ApiResponse({
+    status: 200,
+    description: 'Access Token 갱신 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Access Token이 갱신되었습니다.'
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 401,
+    description: '유효하지 않은 Refresh Token',
+    schema: {
+      type: 'object',
+      properties: {
+        message: {
+          type: 'string',
+          example: 'Invalid refresh token'
+        }
+      }
+    }
+  })
   @ApiSecurity('AccessTokenAuth')
   @ApiSecurity('RefreshTokenAuth')
   async refreshAccess(@Req() req: Request, @Res() res: Response) {
@@ -140,7 +189,16 @@ export class AuthController {
 
   @Post('logout')
   @ApiOperation({ summary: '로그아웃', description: 'JWT 다중세션 방식으로 현재 기기만 로그아웃' })
-  @ApiResponse({ status: 200, description: '로그아웃 성공' })
+  @ApiResponse({
+    status: 200,
+    description: '로그아웃 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: '로그아웃되었습니다.' }
+      }
+    }
+  })
   @ApiSecurity('AccessTokenAuth')
   @ApiSecurity('RefreshTokenAuth')
   async logout(@Req() req: Request, @Res() res: Response) {
@@ -164,8 +222,44 @@ export class AuthController {
   // JWT 다중세션 관리 API 엔드포인트들
   @Get('devices')
   @ApiOperation({ summary: '활성 기기 목록 조회', description: '사용자의 모든 활성 세션(기기) 목록 조회' })
-  @ApiResponse({ status: 200, description: '활성 기기 목록 반환' })
-  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
+  @ApiResponse({
+    status: 200,
+    description: '활성 기기 목록 반환',
+    schema: {
+      type: 'object',
+      properties: {
+        devices: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', example: 'clm123456' },
+              device_id: { type: 'string', example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890' },
+              user_id: { type: 'number', example: 1 },
+              device_name: { type: 'string', example: 'Chrome Browser' },
+              device_type: { type: 'string', example: 'desktop' },
+              last_used_at: { type: 'string', format: 'date-time', example: '2023-01-01T12:00:00.000Z' },
+              created_at: { type: 'string', format: 'date-time', example: '2023-01-01T10:00:00.000Z' },
+              ip_address: { type: 'string', example: '192.168.1.1' },
+              is_active: { type: 'boolean', example: true }
+            }
+          }
+        },
+        total: { type: 'number', example: 3 }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증되지 않은 사용자',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 401 },
+        message: { type: 'string', example: 'Unauthorized' }
+      }
+    }
+  })
   @ApiSecurity('AccessTokenAuth')
   @UseGuards(AuthGuard('jwt'))
   async getActiveDevices(@Req() req: Request) {
@@ -181,8 +275,27 @@ export class AuthController {
 
   @Post('devices/all/logout')
   @ApiOperation({ summary: '모든 다른 기기 로그아웃', description: '현재 기기를 제외한 모든 기기 세션 무효화' })
-  @ApiResponse({ status: 200, description: '모든 다른 기기 로그아웃 성공' })
-  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
+  @ApiResponse({
+    status: 200,
+    description: '모든 다른 기기 로그아웃 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: '다른 모든 기기에서 로그아웃되었습니다.' }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증되지 않은 사용자',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 401 },
+        message: { type: 'string', example: 'Unauthorized' }
+      }
+    }
+  })
   @ApiSecurity('AccessTokenAuth')
   @UseGuards(AuthGuard('jwt'))
   async logoutAllOtherDevices(@Req() req: Request) {
@@ -216,9 +329,39 @@ export class AuthController {
   @Post('devices/:deviceId/logout')
   @ApiOperation({ summary: '특정 기기 로그아웃', description: '본인 소유 기기만 로그아웃 가능' })
   @ApiParam({ name: 'deviceId', description: '기기 ID' })
-  @ApiResponse({ status: 200, description: '기기 로그아웃 성공' })
-  @ApiResponse({ status: 400, description: '해당 기기를 찾을 수 없거나 접근 권한 없음' })
-  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
+  @ApiResponse({
+    status: 200,
+    description: '기기 로그아웃 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: '기기 device-id-123가 로그아웃되었습니다.' }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 400,
+    description: '해당 기기를 찾을 수 없거나 접근 권한 없음',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 400 },
+        message: { type: 'string', example: '해당 기기를 찾을 수 없거나 접근 권한이 없습니다.' },
+        error: { type: 'string', example: 'Bad Request' }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증되지 않은 사용자',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 401 },
+        message: { type: 'string', example: 'Unauthorized' }
+      }
+    }
+  })
   @ApiSecurity('AccessTokenAuth')
   @UseGuards(AuthGuard('jwt'))
   async logoutDevice(@Req() req: Request, @Param('deviceId') deviceId: string) {
@@ -238,8 +381,27 @@ export class AuthController {
 
   @Post('devices/all/force-logout')
   @ApiOperation({ summary: '모든 기기 강제 로그아웃', description: '현재 기기를 포함한 모든 기기 세션 무효화' })
-  @ApiResponse({ status: 200, description: '모든 기기 강제 로그아웃 성공' })
-  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
+  @ApiResponse({
+    status: 200,
+    description: '모든 기기 강제 로그아웃 성공',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string', example: '모든 기기에서 강제 로그아웃되었습니다.' }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증되지 않은 사용자',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 401 },
+        message: { type: 'string', example: 'Unauthorized' }
+      }
+    }
+  })
   @ApiSecurity('AccessTokenAuth')
   @UseGuards(AuthGuard('jwt'))
   async forceLogoutAllDevices(@Req() req: Request, @Res() res: Response) {

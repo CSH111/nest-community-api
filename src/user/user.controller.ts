@@ -28,8 +28,36 @@ export class UserController {
 
   @Get()
   @ApiOperation({ summary: '모든 사용자 조회', description: 'JWT 인증이 필요한 모든 사용자 목록 조회' })
-  @ApiResponse({ status: 200, description: '사용자 목록 조회 성공' })
-  @ApiResponse({ status: 401, description: '인증되지 않은 사용자' })
+  @ApiResponse({
+    status: 200,
+    description: '사용자 목록 조회 성공',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          id: { type: 'number', example: 1 },
+          name: { type: 'string', example: '홍길동' },
+          email: { type: 'string', example: 'user@example.com' },
+          provider: { type: 'string', example: 'google' },
+          provider_id: { type: 'string', example: '1234567890' },
+          created_at: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' },
+          updated_at: { type: 'string', format: 'date-time', example: '2023-01-01T00:00:00.000Z' }
+        }
+      }
+    }
+  })
+  @ApiResponse({
+    status: 401,
+    description: '인증되지 않은 사용자',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number', example: 401 },
+        message: { type: 'string', example: 'Unauthorized' }
+      }
+    }
+  })
   @ApiSecurity('AccessTokenAuth')
   @UseGuards(JwtAuthGuard)
   async findAll() {
