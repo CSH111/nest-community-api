@@ -50,7 +50,7 @@ export class PostService {
       this.prisma.post.findMany({
         where,
         skip,
-        take: limit,
+        take: +limit,
         orderBy,
         include: {
           author: {
