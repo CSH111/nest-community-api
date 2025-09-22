@@ -50,11 +50,22 @@ export class UserController {
   @ApiResponse({
     status: 401,
     description: '인증되지 않은 사용자',
-    schema: {
-      type: 'object',
-      properties: {
-        statusCode: { type: 'number', example: 401 },
-        message: { type: 'string', example: 'Unauthorized' }
+    examples: {
+      'token-expired': {
+        summary: '토큰 만료',
+        value: {
+          statusCode: 401,
+          message: '토큰이 만료되었습니다',
+          error: 'TOKEN_EXPIRED'
+        }
+      },
+      'auth-failed': {
+        summary: '인증 실패',
+        value: {
+          statusCode: 401,
+          message: '인증에 실패했습니다',
+          error: 'AUTHENTICATION_FAILED'
+        }
       }
     }
   })
