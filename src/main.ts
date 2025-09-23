@@ -1,4 +1,5 @@
 import { NestFactory } from '@nestjs/core';
+import { ValidationPipe } from '@nestjs/common';
 import cookieParser from 'cookie-parser';
 import { AppModule } from './app.module';
 import { NestExpressApplication } from '@nestjs/platform-express';
@@ -13,6 +14,15 @@ async function bootstrap() {
 
   // Cookie parser 미들웨어 추가
   app.use(cookieParser());
+
+  // 전역 ValidationPipe 설정
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
   // CORS 설정 (Swagger에서 쿠키 사용을 위해)
   app.enableCors({

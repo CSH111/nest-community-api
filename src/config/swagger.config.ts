@@ -4,8 +4,8 @@ import { NestExpressApplication } from '@nestjs/platform-express';
 export function setupSwagger(app: NestExpressApplication) {
   // Swagger 설정
   const config = new DocumentBuilder()
-    .setTitle('Community API')
-    .setDescription('Community API with Google OAuth and JWT Authentication')
+    .setTitle('커뮤니티 API')
+    .setDescription('google O-auth 및 JWT 인증 기반 커뮤니티 api입니다.')
     .setVersion('1.0')
     .addTag('users', 'User management endpoints')
     .addTag('auth', 'Authentication endpoints')

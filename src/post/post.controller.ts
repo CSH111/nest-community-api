@@ -118,7 +118,6 @@ export class PostController {
             properties: {
               id: { type: 'number', example: 1 },
               title: { type: 'string', example: '안녕하세요!' },
-              content: { type: 'string', example: '첫 게시글입니다.' },
               author_id: { type: 'number', example: 1 },
               view_count: { type: 'number', example: 15 },
               is_pinned: { type: 'boolean', example: false },

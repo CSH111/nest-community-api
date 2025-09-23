@@ -13,7 +13,7 @@ export class CreateCommentDto {
 
   @ApiPropertyOptional({
     description: '부모 댓글 ID (대댓글인 경우)',
-    example: 1,
+    example: null,
   })
   @IsOptional()
   @Type(() => Number)

@@ -166,58 +166,6 @@ export class CommentController {
     return this.commentService.findByPost(postId);
   }
 
-  @Get('comments/:id')
-  @ApiOperation({
-    summary: '댓글 상세 조회',
-    description: '특정 댓글을 조회합니다 (인증 불필요)',
-  })
-  @ApiParam({ name: 'id', description: '댓글 ID', example: 1 })
-  @ApiResponse({
-    status: 200,
-    description: '댓글 조회 성공',
-    schema: {
-      type: 'object',
-      properties: {
-        id: { type: 'number', example: 1 },
-        content: { type: 'string', example: '좋은 게시글이네요!' },
-        post_id: { type: 'number', example: 1 },
-        author_id: { type: 'number', example: 1 },
-        parent_id: { type: 'number', nullable: true, example: null },
-        created_at: { type: 'string', format: 'date-time' },
-        updated_at: { type: 'string', format: 'date-time' },
-        author: {
-          type: 'object',
-          properties: {
-            id: { type: 'number', example: 1 },
-            name: { type: 'string', example: '홍길동' },
-            email: { type: 'string', example: 'user@example.com' },
-          },
-        },
-        post: {
-          type: 'object',
-          properties: {
-            id: { type: 'number', example: 1 },
-            title: { type: 'string', example: '게시글 제목' },
-          },
-        },
-        replies: { type: 'array', items: {} },
-      },
-    },
-  })
-  @ApiResponse({
-    status: 404,
-    description: '댓글을 찾을 수 없음',
-    schema: {
-      type: 'object',
-      properties: {
-        statusCode: { type: 'number', example: 404 },
-        message: { type: 'string', example: '댓글을 찾을 수 없습니다.' },
-      },
-    },
-  })
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.commentService.findOne(id);
-  }
 
   @Patch('comments/:id')
   @ApiOperation({

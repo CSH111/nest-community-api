@@ -55,30 +55,6 @@ export class UserController {
       }
     }
   })
-  @ApiResponse({
-    status: 401,
-    description: '인증되지 않은 사용자',
-    examples: {
-      'token-expired': {
-        summary: '토큰 만료',
-        value: {
-          statusCode: 401,
-          message: '토큰이 만료되었습니다',
-          error: 'TOKEN_EXPIRED'
-        }
-      },
-      'auth-failed': {
-        summary: '인증 실패',
-        value: {
-          statusCode: 401,
-          message: '인증에 실패했습니다',
-          error: 'AUTHENTICATION_FAILED'
-        }
-      }
-    }
-  })
-  @ApiSecurity('AccessTokenAuth')
-  @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: string) {
     const user = await this.userService.findOne(+id);
     if (!user) {

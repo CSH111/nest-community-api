@@ -52,7 +52,14 @@ export class PostService {
         skip,
         take: +limit,
         orderBy,
-        include: {
+        select: {
+          id: true,
+          title: true,
+          author_id: true,
+          view_count: true,
+          is_pinned: true,
+          created_at: true,
+          updated_at: true,
           author: {
             select: {
               id: true,
