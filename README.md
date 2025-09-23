@@ -1,7 +1,7 @@
 # community API
 
 ## 개요
- - NestJS 프레임워크를 학습하기 위해 만든 간단한 커뮤니티 게시판 REST API 서버입니다.
+ - NestJS 프레임워크를 통해 구현한 google o-auth 기반 커뮤니티 REST API 서버입니다.
 
 ## API 문서
 [https://devstacktrend.sungho.my/](https://community.sungho.my/doc)
