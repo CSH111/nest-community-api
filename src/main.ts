@@ -26,7 +26,7 @@ async function bootstrap() {
 
   // CORS 설정 (Swagger에서 쿠키 사용을 위해)
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://localhost:5002'],
+    origin: ['http://localhost:3000', 'http://localhost:5002', "http://community.sungho.my", "https://community.sungho.my"],
     credentials: true,
   });
 
