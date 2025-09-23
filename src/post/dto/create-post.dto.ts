@@ -19,14 +19,4 @@ export class CreatePostDto {
   @IsString()
   @IsNotEmpty()
   content: string;
-
-  @ApiProperty({
-    description: '공지글 여부',
-    example: false,
-    required: false,
-    default: false,
-  })
-  @IsOptional()
-  @IsBoolean()
-  is_pinned?: boolean;
 }

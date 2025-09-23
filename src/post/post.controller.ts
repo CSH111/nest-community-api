@@ -44,7 +44,6 @@ export class PostController {
         content: { type: 'string', example: '첫 게시글입니다.' },
         author_id: { type: 'number', example: 1 },
         view_count: { type: 'number', example: 0 },
-        is_pinned: { type: 'boolean', example: false },
         created_at: { type: 'string', format: 'date-time' },
         updated_at: { type: 'string', format: 'date-time' },
         author: {
@@ -120,8 +119,7 @@ export class PostController {
               title: { type: 'string', example: '안녕하세요!' },
               author_id: { type: 'number', example: 1 },
               view_count: { type: 'number', example: 15 },
-              is_pinned: { type: 'boolean', example: false },
-              created_at: { type: 'string', format: 'date-time' },
+                    created_at: { type: 'string', format: 'date-time' },
               updated_at: { type: 'string', format: 'date-time' },
               author: {
                 type: 'object',
@@ -170,7 +168,6 @@ export class PostController {
         content: { type: 'string', example: '첫 게시글입니다.' },
         author_id: { type: 'number', example: 1 },
         view_count: { type: 'number', example: 16 },
-        is_pinned: { type: 'boolean', example: false },
         created_at: { type: 'string', format: 'date-time' },
         updated_at: { type: 'string', format: 'date-time' },
         author: {
@@ -219,7 +216,6 @@ export class PostController {
         content: { type: 'string', example: '수정된 내용' },
         author_id: { type: 'number', example: 1 },
         view_count: { type: 'number', example: 15 },
-        is_pinned: { type: 'boolean', example: false },
         created_at: { type: 'string', format: 'date-time' },
         updated_at: { type: 'string', format: 'date-time' },
       },

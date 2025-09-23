@@ -57,7 +57,6 @@ export class PostService {
           title: true,
           author_id: true,
           view_count: true,
-          is_pinned: true,
           created_at: true,
           updated_at: true,
           author: {
@@ -186,10 +185,7 @@ export class PostService {
         return { comments: { _count: 'desc' as const } };
       case 'latest':
       default:
-        return [
-          { is_pinned: 'desc' as const },
-          { created_at: 'desc' as const },
-        ];
+        return { created_at: 'desc' as const };
     }
   }
 }
