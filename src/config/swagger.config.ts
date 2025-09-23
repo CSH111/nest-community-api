@@ -7,8 +7,10 @@ export function setupSwagger(app: NestExpressApplication) {
     .setTitle('커뮤니티 API')
     .setDescription('google O-auth 및 JWT 인증 기반 커뮤니티 api입니다.')
     .setVersion('1.0')
-    .addTag('users', 'User management endpoints')
-    .addTag('auth', 'Authentication endpoints')
+    .addTag('auth')
+    .addTag('comments')
+    .addTag('posts')
+    .addTag('users')
     .addSecurity('AccessTokenAuth', {
       type: 'apiKey',
       in: 'cookie',

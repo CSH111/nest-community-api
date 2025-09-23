@@ -20,6 +20,8 @@ describe('UserController', () => {
 
   const mockUserService = {
     findOne: jest.fn(),
+    findUserPosts: jest.fn(),
+    findUserComments: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -52,7 +54,7 @@ describe('UserController', () => {
     it('should return a user when found', async () => {
       mockUserService.findOne.mockResolvedValue(mockUser);
 
-      const result = await controller.findOne('1');
+      const result = await controller.findOne(1);
 
       expect(result).toEqual(mockUser);
       expect(mockUserService.findOne).toHaveBeenCalledWith(1);
@@ -61,18 +63,11 @@ describe('UserController', () => {
     it('should throw HttpException when user not found', async () => {
       mockUserService.findOne.mockResolvedValue(null);
 
-      await expect(controller.findOne('999')).rejects.toThrow(
+      await expect(controller.findOne(999)).rejects.toThrow(
         new HttpException('User not found', HttpStatus.NOT_FOUND),
       );
       expect(mockUserService.findOne).toHaveBeenCalledWith(999);
     });
 
-    it('should convert string id to number', async () => {
-      mockUserService.findOne.mockResolvedValue(mockUser);
-
-      await controller.findOne('123');
-
-      expect(mockUserService.findOne).toHaveBeenCalledWith(123);
-    });
   });
 });
