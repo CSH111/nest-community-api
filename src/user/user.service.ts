@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { Prisma, User } from '@prisma/client';
 
@@ -24,16 +22,52 @@ export class UserService {
     });
   }
 
-  // async update(id: number, updateUserDto: UpdateUserDto) {
-  //   return this.prisma.user.update({
-  //     where: { id },
-  //     data: updateUserDto,
-  //   });
-  // }
+  async findUserPosts(userId: number) {
+    return this.prisma.post.findMany({
+      where: { author_id: userId },
+      select: {
+        id: true,
+        title: true,
+        author_id: true,
+        view_count: true,
+        created_at: true,
+        updated_at: true,
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        _count: {
+          select: {
+            comments: true,
+          },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+    });
+  }
 
-  // async remove(id: number) {
-  //   return this.prisma.user.delete({
-  //     where: { id },
-  //   });
-  // }
+  async findUserComments(userId: number) {
+    return this.prisma.comment.findMany({
+      where: { author_id: userId },
+      include: {
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+          },
+        },
+        post: {
+          select: {
+            id: true,
+            title: true,
+          },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+    });
+  }
 }
